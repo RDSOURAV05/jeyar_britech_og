@@ -199,52 +199,57 @@ document.addEventListener('DOMContentLoaded', () => {
         function calculateSolarPotential() {
             const currentBill = parseInt(monthlyBillInput.value, 10);
             
-            // KSEB Domestic Telescopic Tariff Slab rates (as of recent KSEB tariff schedule)
-            // Units consumed slab calculations
             let calculatedMonthlyUnits = 0;
+            const monthlyBillAmount = billingCycle === 'bimonthly' ? currentBill / 2 : currentBill;
+            calculatedMonthlyUnits = calculateKsebUnitsFromBill(monthlyBillAmount);
             
-            // Convert current bill payment into approximate energy consumption units (kWh)
-            // Domestic tariff includes fixed charges, energy charges, duty (10%), and meter rent.
-            if (billingCycle === 'bimonthly') {
-                calculatedMonthlyUnits = calculateKsebUnitsFromBill(currentBill / 2);
-            } else {
-                calculatedMonthlyUnits = calculateKsebUnitsFromBill(currentBill);
-            }
+            // 150 units/month per kWp (High efficiency Topcon metrics)
+            const averageMonthlyProductionPerKw = 150;
             
-            // Average daily solar production: 1 kW solar array generates ~4 units per day
-            // Therefore, 1 kW solar array generates ~120 units per month.
-            const averageMonthlyProductionPerKw = 120;
+            // Recommend system size to fully offset consumption
+            let recommendedSystemSize = Math.ceil(calculatedMonthlyUnits / averageMonthlyProductionPerKw);
+            // KSEB subsidy threshold minimum is usually 3kW, max domestic practical is ~50kW
+            recommendedSystemSize = Math.max(3, Math.min(50, recommendedSystemSize));
             
-            // Determine required plant size to offset consumption
-            // Minimum system is 3kW (KSEB subsidy starting threshold), max domestic is 25kW.
-            let recommendedSystemSize = Math.ceil((calculatedMonthlyUnits * 0.85) / averageMonthlyProductionPerKw);
-            recommendedSystemSize = Math.max(3, Math.min(25, recommendedSystemSize));
-            
-            // Calculate system metrics
             const monthlyGeneration = recommendedSystemSize * averageMonthlyProductionPerKw;
-            
-            // Exposure factor
             const exposureFactor = exposureSelect ? parseFloat(exposureSelect.value) : 1.0;
             const netMonthlyGeneration = monthlyGeneration * exposureFactor;
             
-            // Financial Savings estimation based on average unit price of slab
-            const averageKsebUnitCost = 7.2; // Average domestic slab cost
-            let monthlySavings = netMonthlyGeneration * averageKsebUnitCost;
+            // Savings Calculation (Including Net Metering)
+            // Calculate effective cost per unit they were paying before
+            const effectiveUnitCost = calculatedMonthlyUnits > 0 ? (monthlyBillAmount / calculatedMonthlyUnits) : 5.0;
             
-            // Cap savings to bill amount to make realistic
-            if (billingCycle === 'bimonthly') {
-                monthlySavings = Math.min(currentBill / 2, monthlySavings);
+            let monthlySavings = 0;
+            if (netMonthlyGeneration > calculatedMonthlyUnits) {
+                // If generating more than consuming: 
+                // Savings = avoiding the entire bill + selling excess to KSEB at ₹2.69
+                const excessUnits = netMonthlyGeneration - calculatedMonthlyUnits;
+                monthlySavings = monthlyBillAmount + (excessUnits * 2.69);
             } else {
-                monthlySavings = Math.min(currentBill, monthlySavings);
+                // If consuming more than generating:
+                // Savings = value of generated units offset at their effective rate
+                monthlySavings = netMonthlyGeneration * effectiveUnitCost;
             }
             
-            // Payback Period calculation: Avg domestic installation is ₹65,000 per kW (after subsidy)
-            const baseCostPerKw = 65000; 
-            const totalSystemCost = recommendedSystemSize * baseCostPerKw;
+            // System Cost - Tiered KSEB standard pricing
+            let costPerKw = 60000;
+            if (recommendedSystemSize <= 3) {
+                costPerKw = 65000;
+            } else if (recommendedSystemSize <= 10) {
+                costPerKw = 60000;
+            } else {
+                costPerKw = 55000;
+            }
+            const totalSystemCost = recommendedSystemSize * costPerKw;
+            
+            // Payback Period
             const annualSavings = monthlySavings * 12;
             const paybackPeriod = annualSavings > 0 ? (totalSystemCost / annualSavings) : 0;
             
-            // Environmental Impact metrics (MNRE standards)
+            // Roof space (80 sq.ft per kWp for modern panels)
+            const roofSpace = recommendedSystemSize * 80;
+            
+            // Environmental Impact metrics
             const annualCo2Saved = (netMonthlyGeneration * 12 * 0.82) / 1000; // in tons
             const treesPlantedEquivalent = Math.round(annualCo2Saved * 45); // ~45 trees absorb 1 ton CO2/yr
             
@@ -258,12 +263,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 currentGeneration = `${Math.round(netMonthlyGeneration)} kWh (Monthly)`;
                 currentSavings = `₹${Math.round(monthlySavings)} (Monthly)`;
             }
-            
             currentPayback = `${paybackPeriod.toFixed(1)} Years`;
 
             // Update UI elements
             if (systemSizeEl) systemSizeEl.textContent = `${recommendedSystemSize} kWp`;
-            if (roofSpaceEl) roofSpaceEl.textContent = `${recommendedSystemSize * 100} sq. ft.`;
+            if (roofSpaceEl) roofSpaceEl.textContent = `${roofSpace} sq. ft.`;
             
             if (billingCycle === 'bimonthly') {
                 if (generationEl) generationEl.textContent = `(Est. ${Math.round(netMonthlyGeneration * 2)} Units / Bi-monthly)`;
@@ -288,16 +292,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         function calculateKsebUnitsFromBill(monthlyBill) {
-            // Simplified reverse KSEB domestic billing function
-            if (monthlyBill <= 120) return 40;
-            if (monthlyBill <= 240) return 80;
-            if (monthlyBill <= 380) return 120;
-            if (monthlyBill <= 600) return 180;
-            if (monthlyBill <= 950) return 240;
-            if (monthlyBill <= 1500) return 320;
-            if (monthlyBill <= 2200) return 420;
-            if (monthlyBill <= 3500) return 550;
-            return Math.round(monthlyBill / 7.5);
+            // Refined reverse KSEB domestic billing function (Monthly)
+            if (monthlyBill <= 150) return 50;
+            if (monthlyBill <= 300) return 100;
+            if (monthlyBill <= 550) return 150;
+            if (monthlyBill <= 850) return 200;
+            if (monthlyBill <= 1250) return 250;
+            // Above 250 units, rates become non-telescopic and steeper
+            if (monthlyBill <= 2200) return 300;
+            if (monthlyBill <= 3000) return 400;
+            if (monthlyBill <= 4500) return 500;
+            // High consumption averages around ₹8.5 per unit
+            return Math.round(monthlyBill / 8.5);
         }
     }
 
