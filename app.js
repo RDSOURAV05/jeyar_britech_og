@@ -477,8 +477,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const railSearchTrigger = document.getElementById('rail-search-trigger');
 
     function toggleSidebarRail() {
-        document.body.classList.toggle('sidebar-closed');
-        document.body.classList.toggle('sidebar-open');
+        const isClosed = document.body.classList.toggle('sidebar-closed');
+        const isOpen = document.body.classList.toggle('sidebar-open');
+        
+        const topBtn = document.getElementById('top-sidebar-btn');
+        if (topBtn) {
+            const span = topBtn.querySelector('span');
+            const caret = topBtn.querySelector('.caret');
+            const isMobile = window.innerWidth <= 992;
+            const isCurrentlyOpen = isMobile ? isOpen : !isClosed;
+            
+            if (span) span.textContent = isCurrentlyOpen ? 'Close sidebar' : 'Open sidebar';
+            if (caret) caret.style.transform = isCurrentlyOpen ? 'rotate(180deg)' : 'rotate(0deg)';
+        }
     }
 
     if (topSidebarBtn) {
