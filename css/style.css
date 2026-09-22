@@ -572,7 +572,7 @@ img {
 
 .solar-panel-graphic {
     aspect-ratio: 16/10;
-    background: url('assets/solar_panel_villa.png') no-repeat center center;
+    background: url('../assets/solar_panel_villa.png') no-repeat center center;
     background-size: cover;
     border-radius: 20px;
     position: relative;
