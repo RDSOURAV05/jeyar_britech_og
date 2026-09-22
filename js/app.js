@@ -188,7 +188,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     `Please contact me for further consultation.`;
 
                 const encodedText = encodeURIComponent(textMessage);
-                const whatsappUrl = `https://wa.me/917306670442?text=${encodedText}`;
+                const whatsappUrl = `https://wa.me/918590549069?text=${encodedText}`;
                 window.open(whatsappUrl, '_blank');
             });
         }
@@ -538,7 +538,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (aboutSection) aboutSection.scrollIntoView({ behavior: 'smooth' });
         } else {
             const encoded = encodeURIComponent(`Hi Jeyar Brightech, I have a question: ${promptInput.value}`);
-            window.open(`https://wa.me/917306670442?text=${encoded}`, '_blank');
+            window.open(`https://wa.me/918590549069?text=${encoded}`, '_blank');
         }
     }
 
