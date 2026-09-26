@@ -388,8 +388,22 @@ document.addEventListener('DOMContentLoaded', () => {
             if (submitBtnText) submitBtnText.classList.add('hidden');
             if (submitLoader) submitLoader.classList.remove('hidden');
 
-            // Simulate API post (1.5 seconds)
+            // Construct WhatsApp Message
+            const locationEl = document.getElementById('contact-location');
+            const messageEl = document.getElementById('contact-message');
+            const loc = locationEl ? locationEl.value.trim() : '';
+            const msg = messageEl ? messageEl.value.trim() : '';
+            
+            let text = `Hi Jeyar Brightech,\n\nI have an inquiry from the website:\n\n*Name:* ${name}\n*Phone:* ${phone}`;
+            if (loc) text += `\n*Location:* ${loc}`;
+            if (msg) text += `\n*Message:* ${msg}`;
+            
+            const whatsappUrl = `https://wa.me/918590549069?text=${encodeURIComponent(text)}`;
+
             setTimeout(() => {
+                // Open WhatsApp
+                window.open(whatsappUrl, '_blank');
+
                 // Reset button states
                 if (submitBtn) submitBtn.disabled = false;
                 if (submitBtnText) submitBtnText.classList.remove('hidden');
@@ -398,23 +412,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Reset form
                 contactForm.reset();
 
-                // Re-calculate solar values to slider default if calculator exists
-                if (monthlyBillInput) {
-                    monthlyBillInput.value = 5000;
-                    if (billDisplay) billDisplay.textContent = '₹5,000';
-                    const defaultCycleBtn = document.querySelector('.cycle-btn[data-cycle="bimonthly"]');
-                    if (defaultCycleBtn) {
-                        const cycleBtns = document.querySelectorAll('.cycle-btn');
-                        cycleBtns.forEach(b => b.classList.remove('active'));
-                        defaultCycleBtn.classList.add('active');
-                    }
-                    // Trigger recalculate
-                    monthlyBillInput.dispatchEvent(new Event('input'));
-                }
-
                 // Show congratulations toast
-                showToast('Request submitted! JEYAR BRIGHTECH will contact you shortly.', 'success');
-            }, 1500);
+                showToast('Redirecting you to WhatsApp to complete your request!', 'success');
+            }, 800);
         });
     }
 
