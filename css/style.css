@@ -3139,3 +3139,10 @@ body.sidebar-closed .header {
     }
 }
 
+
+/* --- FIXES FOR MOBILE & LEGIBILITY --- */
+.hero-title, .hero-subtitle { color: #ffffff !important; text-shadow: 0 2px 8px rgba(0,0,0,0.7); }
+.hero-subtitle { font-weight: 500; font-size: 1.1rem; }
+.footer .logo-text, .footer h4, .footer .footer-link, .footer p, .footer-bottom p { color: #e2e8f0 !important; }
+.footer .logo-text { color: #ffffff !important; }
+@media (max-width: 576px) { .scroll-indicator { display: none !important; } .stat-label { font-size: 0.7rem !important; line-height: 1.2; } .stat-number { font-size: 1.5rem !important; } }
